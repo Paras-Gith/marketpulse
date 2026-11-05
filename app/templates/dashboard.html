@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="pulse" aria-labelledby="pulse-title">
+  <h1 id="pulse-title">Indian market news, sorted by what it means for investors</h1>
+  <div class="pulse-bar" role="img" aria-label="Last 24 hours: {{ pulse.bullish }} bullish, {{ pulse.neutral }} neutral, {{ pulse.bearish }} bearish">
+    <i class="seg up" style="--w: {{ pulse.bullish_pct }}%"></i><i class="seg flat" style="--w: {{ pulse.neutral_pct }}%"></i><i class="seg down" style="--w: {{ pulse.bearish_pct }}%"></i>
+  </div>
+  <p class="pulse-text">Last 24 hours: {{ pulse.total }} stories. {{ pulse.bullish }} bullish, {{ pulse.neutral }} neutral, {{ pulse.bearish }} bearish.</p>
+</section>
+
+<div class="layout">
+  <div class="feed">
+    <nav class="filters" aria-label="Categories">
+      <a href="/" class="{{ 'on' if not active }}">All</a>
+      {% for c in categories %}<a href="/?category={{ c | urlencode }}" class="{{ 'on' if active == c }}">{{ c }}</a>{% endfor %}
+    </nav>
+
+    {% if rows %}
+    <ol class="wire">
+      {% for r in rows %}{% set a = r.a %}
+      <li class="story s-{{ a.sentiment }} {{ 'is-locked' if r.locked }}">
+        <span class="rail" aria-hidden="true"></span>
+        <div class="story-body">
+          <p class="meta"><span class="cat">{{ a.category }}</span><span class="tone">{{ a.sentiment | capitalize }}</span><span>{{ a.published_at | ago }}</span>{% if not r.locked %}<span>{{ a.source }}</span>{% endif %}</p>
+          {% if r.locked %}
+            <div class="skeleton" aria-hidden="true"><i></i><i></i></div>
+            <p class="lock-note">Free accounts see this story in {{ r.unlocks_in }} min. Pro readers see it now.</p>
+          {% else %}
+            <h2>{% if a.link.startswith('http') %}<a href="{{ a.link }}" target="_blank" rel="noopener noreferrer">{{ a.title }}</a>{% else %}{{ a.title }}{% endif %}</h2>
+            <p class="insight">{{ a.insight or a.summary }}</p>
+            {% if r.owned %}
+              <a class="btn ghost small" href="/brief/{{ a.id }}">Read your deep brief</a>
+            {% else %}
+              <form method="post" action="/brief/{{ a.id }}/buy"><button class="btn pay small">Get deep brief for ${{ settings.brief_price_usd }}</button></form>
+            {% endif %}
+          {% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}
+      <p class="empty">No stories in this category yet. New stories are classified every {{ (settings.poll_interval_seconds // 60) or 1 }} min.</p>
+    {% endif %}
+  </div>
+
+  <aside class="side">
+    <section class="panel">
+      {% if user and user.plan == 'pro' %}
+        <h2>You're on Pro</h2>
+        <p>Every story appears the moment it's classified, with no delay.</p>
+        <form method="post" action="/subscription/cancel"><button class="btn ghost small">Cancel subscription</button></form>
+      {% else %}
+        <h2>Read stories the moment they land</h2>
+        <p>Free accounts see each story after {{ settings.feed_delay_minutes }} minutes. Pro removes the wait for ${{ settings.pro_price_usd }} a month.</p>
+        <form method="post" action="/subscribe"><button class="btn pay">Subscribe with PayPal</button></form>
+      {% endif %}
+    </section>
+
+    <section class="panel">
+      <h2>Deep briefs</h2>
+      <p>One story, explained in four short parts: what happened, why it matters, who is affected and what to watch next. Pay ${{ settings.brief_price_usd }} once with PayPal and keep it.</p>
+    </section>
+
+    {% if briefs %}
+    <section class="panel">
+      <h2>Your briefs</h2>
+      <ul class="brief-list">
+        {% for b, a in briefs %}<li><a href="/brief/{{ a.id }}">{{ a.title }}</a></li>{% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

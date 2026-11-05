@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Deep brief - {{ settings.app_name }}{% endblock %}
+{% block content %}
+<article class="brief">
+  <p class="meta"><span class="cat">{{ article.category }}</span><span class="tone">{{ article.sentiment | capitalize }}</span><span>{{ article.published_at | ago }}</span></p>
+  <h1>{{ article.title }}</h1>
+  {% for label, text in sections %}
+    <section>
+      <h2>{{ label }}</h2>
+      <p>{{ text }}</p>
+    </section>
+  {% endfor %}
+  <p class="disclaimer">Written by an AI model from the story's headline and summary. It is informational and is not investment advice.</p>
+  <p><a class="btn ghost small" href="/">Back to the feed</a>{% if article.link.startswith('http') %} <a class="btn ghost small" href="{{ article.link }}" target="_blank" rel="noopener noreferrer">Read the original story</a>{% endif %}</p>
+</article>
+{% endblock %}

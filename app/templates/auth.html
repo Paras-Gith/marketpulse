@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Create account' if mode == 'signup' else 'Log in' }} - {{ settings.app_name }}{% endblock %}
+{% block content %}
+<section class="auth">
+  <h1>{{ 'Create your account' if mode == 'signup' else 'Log in to MarketPulse AI' }}</h1>
+  <p class="lede">{{ 'Free accounts read every story after a short delay. Upgrade any time.' if mode == 'signup' else 'Welcome back.' }}</p>
+  {% if error %}<p class="field-error" role="alert">{{ error }}</p>{% endif %}
+  <form method="post" action="/{{ mode }}" class="form">
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" autocomplete="email" required>
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" minlength="8" maxlength="64" autocomplete="{{ 'new-password' if mode == 'signup' else 'current-password' }}" required>
+    {% if mode == 'signup' %}<p class="hint">8 to 64 characters.</p>{% endif %}
+    <button class="btn">{{ 'Create account' if mode == 'signup' else 'Log in' }}</button>
+  </form>
+  <p class="alt">{% if mode == 'signup' %}Already have an account? <a href="/login">Log in</a>{% else %}New here? <a href="/signup">Create an account</a>{% endif %}</p>
+</section>
+{% endblock %}

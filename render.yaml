@@ -1,0 +1,22 @@
+# Render Blueprint: deploys the Docker image. Fill the secret values in the Render dashboard.
+services:
+  - type: web
+    name: marketpulse-ai
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: BASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_PLAN_ID
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false

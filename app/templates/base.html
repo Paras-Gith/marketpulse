@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ settings.app_name }}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/">MarketPulse AI</a>
+    <nav class="account" aria-label="Account">
+      {% if user %}
+        <span class="who">{{ user.email }}</span>
+        <span class="badge {{ 'pro' if user.plan == 'pro' else '' }}">{{ 'Pro' if user.plan == 'pro' else 'Free' }}</span>
+        <form method="post" action="/logout"><button class="link">Log out</button></form>
+      {% else %}
+        <a href="/login">Log in</a>
+        <a class="btn small" href="/signup">Create account</a>
+      {% endif %}
+    </nav>
+  </header>
+  {% if flash %}<div class="flash {{ flash.kind }}" role="status">{{ flash.message }}</div>{% endif %}
+  <main>{% block content %}{% endblock %}</main>
+  {% if settings.paypal_env == 'sandbox' %}
+  <footer class="foot">Payments run in the PayPal sandbox. No real money moves. Market commentary is informational and is not investment advice.</footer>
+  {% endif %}
+</body>
+</html>
