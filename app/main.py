@@ -81,7 +81,9 @@ def flash(request: Request, message: str, kind: str = "info") -> None:
 
 
 def render(request: Request, name: str, user: User | None, status_code: int = 200, **ctx):
-    ctx.update(user=user, settings=settings, flash=request.session.pop("flash", None))
+    now = utcnow()
+    ctx.update(user=user, settings=settings, flash=request.session.pop("flash", None),
+               today=f"{now:%A}, {now.day} {now:%B %Y}")
     return templates.TemplateResponse(request, name, ctx, status_code=status_code)
 
 
@@ -148,7 +150,15 @@ def dashboard(request: Request, category: str | None = None, user: User | None =
             select(Brief, Article).join(Article, Article.id == Brief.article_id)
             .where(Brief.user_id == user.id).order_by(Brief.created_at.desc()).limit(10)
         ).all()
-    return render(request, "dashboard.html", user, rows=rows, pulse=pulse, categories=ai.CATEGORIES, active=category, briefs=briefs)
+    open_rows = [r for r in rows if not r["locked"]]
+    return render(
+        request, "dashboard.html", user, pulse=pulse, categories=ai.CATEGORIES, active=category, briefs=briefs,
+        locked=[r for r in rows if r["locked"]],
+        lead=open_rows[0] if open_rows else None,
+        secondary=open_rows[1:3],
+        latest=open_rows[3:8],
+        more=open_rows[8:],
+    )
 
 
 @app.get("/healthz")

@@ -6,11 +6,12 @@
   <title>{% block title %}{{ settings.app_name }}{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600..900&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&family=Public+Sans:wght@400..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
-  <header class="top">
+  <header class="mast">
+    <p class="dateline">{{ today }}</p>
     <a class="brand" href="/">MarketPulse AI</a>
     <nav class="account" aria-label="Account">
       {% if user %}
@@ -23,6 +24,7 @@
       {% endif %}
     </nav>
   </header>
+  {% block subnav %}{% endblock %}
   {% if flash %}<div class="flash {{ flash.kind }}" role="status">{{ flash.message }}</div>{% endif %}
   <main>{% block content %}{% endblock %}</main>
   {% if settings.paypal_env == 'sandbox' %}

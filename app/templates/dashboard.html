@@ -1,45 +1,106 @@
 {% extends "base.html" %}
+
+{% block subnav %}
+<nav class="subnav" aria-label="Categories">
+  <a href="/" class="{{ 'on' if not active }}">All</a>
+  {% for c in categories %}<a href="/?category={{ c | urlencode }}" class="{{ 'on' if active == c }}">{{ c }}</a>{% endfor %}
+</nav>
+{% endblock %}
+
 {% block content %}
-<section class="pulse" aria-labelledby="pulse-title">
-  <h1 id="pulse-title">Indian market news, sorted by what it means for investors</h1>
-  <div class="pulse-bar" role="img" aria-label="Last 24 hours: {{ pulse.bullish }} bullish, {{ pulse.neutral }} neutral, {{ pulse.bearish }} bearish">
+{% macro headline(a) %}{% if a.link.startswith('http') %}<a href="{{ a.link }}" target="_blank" rel="noopener noreferrer">{{ a.title }}</a>{% else %}{{ a.title }}{% endif %}{% endmacro %}
+{% macro byline(a) %}<p class="byline">{{ a.published_at | ago }} &mdash; {{ a.source }}<span class="tone t-{{ a.sentiment }}">{{ a.sentiment | capitalize }}</span></p>{% endmacro %}
+{% macro brief_btn(r) %}{% if r.owned %}<a class="btn ghost small" href="/brief/{{ r.a.id }}">Read your deep brief</a>{% else %}<form method="post" action="/brief/{{ r.a.id }}/buy"><button class="btn pay small">Deep brief ${{ settings.brief_price_usd }}</button></form>{% endif %}{% endmacro %}
+{% macro brief_link(r) %}{% if r.owned %}<a class="textbtn" href="/brief/{{ r.a.id }}">Read your deep brief</a>{% else %}<form method="post" action="/brief/{{ r.a.id }}/buy"><button class="textbtn">Deep brief ${{ settings.brief_price_usd }}</button></form>{% endif %}{% endmacro %}
+
+<div class="section-title"><h1>{{ active or 'Markets' }}</h1></div>
+<p class="standfirst">Indian market news, sorted by what it means for investors.</p>
+
+<div class="mood" role="img" aria-label="Last 24 hours: {{ pulse.bullish }} bullish, {{ pulse.neutral }} neutral, {{ pulse.bearish }} bearish">
+  <div class="mood-bar">
     <i class="seg up" style="--w: {{ pulse.bullish_pct }}%"></i><i class="seg flat" style="--w: {{ pulse.neutral_pct }}%"></i><i class="seg down" style="--w: {{ pulse.bearish_pct }}%"></i>
   </div>
-  <p class="pulse-text">Last 24 hours: {{ pulse.total }} stories. {{ pulse.bullish }} bullish, {{ pulse.neutral }} neutral, {{ pulse.bearish }} bearish.</p>
+  <p>Market mood, last 24 hours: {{ pulse.total }} stories. {{ pulse.bullish }} bullish, {{ pulse.neutral }} neutral, {{ pulse.bearish }} bearish.</p>
+</div>
+
+{% if locked %}
+<section class="justin" aria-labelledby="justin-title">
+  <h2 id="justin-title" class="kicker">Just in, for Pro readers</h2>
+  <div class="justin-row">
+    {% for r in locked %}
+    <div class="jcard s-{{ r.a.sentiment }}">
+      <p class="meta"><span class="cat">{{ r.a.category }}</span><span class="tone t-{{ r.a.sentiment }}">{{ r.a.sentiment | capitalize }}</span></p>
+      <div class="skeleton" aria-hidden="true"><i></i><i></i></div>
+      <p class="lock-note">Free in {{ r.unlocks_in }} min</p>
+    </div>
+    {% endfor %}
+    <div class="jcta">
+      <p>Read these now.</p>
+      <form method="post" action="/subscribe"><button class="btn pay small">Subscribe with PayPal</button></form>
+    </div>
+  </div>
 </section>
+{% endif %}
 
 <div class="layout">
-  <div class="feed">
-    <nav class="filters" aria-label="Categories">
-      <a href="/" class="{{ 'on' if not active }}">All</a>
-      {% for c in categories %}<a href="/?category={{ c | urlencode }}" class="{{ 'on' if active == c }}">{{ c }}</a>{% endfor %}
-    </nav>
-
-    {% if rows %}
-    <ol class="wire">
-      {% for r in rows %}{% set a = r.a %}
-      <li class="story s-{{ a.sentiment }} {{ 'is-locked' if r.locked }}">
-        <span class="rail" aria-hidden="true"></span>
-        <div class="story-body">
-          <p class="meta"><span class="cat">{{ a.category }}</span><span class="tone">{{ a.sentiment | capitalize }}</span><span>{{ a.published_at | ago }}</span>{% if not r.locked %}<span>{{ a.source }}</span>{% endif %}</p>
-          {% if r.locked %}
-            <div class="skeleton" aria-hidden="true"><i></i><i></i></div>
-            <p class="lock-note">Free accounts see this story in {{ r.unlocks_in }} min. Pro readers see it now.</p>
+  <div class="content">
+    {% if lead %}
+    <div class="top">
+      <aside class="latest" aria-labelledby="latest-title">
+        <h2 id="latest-title" class="kicker">Latest</h2>
+        <ul>
+          {% for r in latest %}
+          <li class="s-{{ r.a.sentiment }}">
+            <h3>{{ headline(r.a) }}</h3>
+            {{ byline(r.a) }}
+            {{ brief_link(r) }}
+          </li>
           {% else %}
-            <h2>{% if a.link.startswith('http') %}<a href="{{ a.link }}" target="_blank" rel="noopener noreferrer">{{ a.title }}</a>{% else %}{{ a.title }}{% endif %}</h2>
-            <p class="insight">{{ a.insight or a.summary }}</p>
-            {% if r.owned %}
-              <a class="btn ghost small" href="/brief/{{ a.id }}">Read your deep brief</a>
-            {% else %}
-              <form method="post" action="/brief/{{ a.id }}/buy"><button class="btn pay small">Get deep brief for ${{ settings.brief_price_usd }}</button></form>
-            {% endif %}
-          {% endif %}
+          <li class="quiet">More stories appear here as they are classified.</li>
+          {% endfor %}
+        </ul>
+      </aside>
+
+      <div class="lead-col">
+        {% set a = lead.a %}
+        <article class="lead s-{{ a.sentiment }}">
+          <p class="meta"><span class="cat">{{ a.category }}</span></p>
+          <h2>{{ headline(a) }}</h2>
+          <p class="lead-text">{{ a.insight or a.summary }}</p>
+          {{ byline(a) }}
+          {{ brief_btn(lead) }}
+        </article>
+        {% if secondary %}
+        <div class="pair">
+          {% for r in secondary %}
+          <article class="s-{{ r.a.sentiment }}">
+            <p class="meta"><span class="cat">{{ r.a.category }}</span></p>
+            <h3>{{ headline(r.a) }}</h3>
+            <p class="desc">{{ r.a.insight or r.a.summary }}</p>
+            {{ byline(r.a) }}
+            {{ brief_btn(r) }}
+          </article>
+          {% endfor %}
         </div>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+      <p class="empty">No open stories here yet. New stories are classified every {{ (settings.poll_interval_seconds // 60) or 1 }} min.</p>
+    {% endif %}
+
+    {% if more %}
+    <h2 class="red-head">More stories from {{ active or 'Markets' }}</h2>
+    <ol class="plist">
+      {% for r in more %}
+      <li class="s-{{ r.a.sentiment }}">
+        <h3>{{ headline(r.a) }}</h3>
+        <p class="desc">{{ r.a.insight or r.a.summary }}</p>
+        {{ byline(r.a) }}
+        {{ brief_btn(r) }}
       </li>
       {% endfor %}
     </ol>
-    {% else %}
-      <p class="empty">No stories in this category yet. New stories are classified every {{ (settings.poll_interval_seconds // 60) or 1 }} min.</p>
     {% endif %}
   </div>
 
@@ -65,7 +126,7 @@
     <section class="panel">
       <h2>Your briefs</h2>
       <ul class="brief-list">
-        {% for b, a in briefs %}<li><a href="/brief/{{ a.id }}">{{ a.title }}</a></li>{% endfor %}
+        {% for b, art in briefs %}<li><a href="/brief/{{ art.id }}">{{ art.title }}</a></li>{% endfor %}
       </ul>
     </section>
     {% endif %}
