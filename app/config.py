@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_FEEDS = ",".join(
@@ -38,6 +39,11 @@ class Settings(BaseSettings):
     poll_interval_seconds: int = 300
     feed_delay_minutes: int = 30
     seed_demo: bool = True
+
+    @field_validator("base_url")
+    @classmethod
+    def _strip_trailing_slash(cls, value: str) -> str:
+        return value.strip().rstrip("/")
 
     @property
     def paypal_base(self) -> str:
